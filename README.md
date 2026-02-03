@@ -7,6 +7,6 @@ Dette er et skoleprojekt til IT-sikkerhed på Zealand Næstved.
 - Opgaver og øvelser relateret til IT-sikkerhed
 - Dokumentation og noter
 
-## Forfatter
+## Udarbejdet af
 
 Rasmus
