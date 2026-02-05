@@ -11,9 +11,9 @@ Dette er et skoleprojekt til IT-sikkerhed på Zealand Næstved.
   - [Ækvivalensklasser](#ækvivalensklasser)
   - [Decision Table Test](#decision-table-test)
   - [CRUD(L) Test](#crudl-test)
-- [Security Gates](#security-gates)
+- [Security Gates (05-02)](#security-gates-05-02)
   - [Cycle Process Test](#cycle-process-test)
-- [Test Pyramiden](#test-pyramiden)
+- [Test Pyramiden (05-02)](#test-pyramiden-05-02)
 
 ## Kør alle tests
 
@@ -119,7 +119,7 @@ pytest test/test_crud.py -v
 
 ![CRUD Resultater](images/crud_results.png)
 
-## Security Gates
+## Security Gates (05-02)
 
 Hvilke quality gates dækker vores tests:
 
@@ -149,7 +149,7 @@ pytest test/test_cycle.py -v
 
 ![Cycle Process Resultater](images/cycle_results.png)
 
-## Test Pyramiden
+## Test Pyramiden (05-02)
 
 Vores tests placeret i pyramiden (bottom-up):
 
