@@ -7,7 +7,7 @@ Dette er et skoleprojekt til IT-sikkerhed på Zealand Næstved.
 - Opgaver og øvelser relateret til IT-sikkerhed
 - Dokumentation og noter
 
-## Unit Tests
+## Unit Tests (03-02)
 
 Vi har lavet unit tests med pytest for at demonstrere hvordan testing fungerer.
 
@@ -29,6 +29,17 @@ Vi har lavet unit tests med pytest for at demonstrere hvordan testing fungerer.
 ```bash
 pytest -v
 ```
+
+## Grænseværditest (05-02)
+
+Boundary value testing af password længde validering (8-64 tegn).
+
+| Længde | Resultat | Type |
+|--------|----------|------|
+| 7 | ❌ Invalid | Grænseværdi (under min) |
+| 8 | ✅ Valid | Grænseværdi (præcis min) |
+| 64 | ✅ Valid | Grænseværdi (præcis max) |
+| 65 | ❌ Invalid | Grænseværdi (over max) |
 
 ## Udarbejdet af
 
