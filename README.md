@@ -13,7 +13,7 @@ Vi har lavet unit tests med pytest for at demonstrere hvordan testing fungerer.
 
 ### Test Resultater
 
-![Test Resultater](test_results.png)
+![Test Resultater](images/test_results.png)
 
 **Alle tests kører som forventet!**
 
@@ -40,6 +40,8 @@ Boundary value testing af password længde validering (8-64 tegn).
 | 8 | ✅ Valid | Grænseværdi (præcis min) |
 | 64 | ✅ Valid | Grænseværdi (præcis max) |
 | 65 | ❌ Invalid | Grænseværdi (over max) |
+
+![Grænseværditest Resultater](images/boundary_test_results.png)
 
 ## Udarbejdet af
 
