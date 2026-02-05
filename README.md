@@ -43,6 +43,12 @@ Boundary value testing af password længde validering (8-64 tegn).
 
 ![Grænseværditest Resultater](images/boundary_test_results.png)
 
+### Kør grænseværditests
+
+```bash
+pytest test/test_boundary.py -v
+```
+
 ## Udarbejdet af
 
 Rasmus
