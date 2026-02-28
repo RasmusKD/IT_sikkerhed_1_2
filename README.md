@@ -16,6 +16,9 @@ Dette er et skoleprojekt til IT-sikkerhed på Zealand Næstved.
 - [Test Pyramiden (05-02)](#test-pyramiden-05-02)
 - [Flat File Database (10-02)](#flat-file-database-10-02)
 - [Kryptering + Hashing (10-02)](#kryptering--hashing-10-02)
+- [REST API (19-02)](#rest-api-19-02)
+- [Auth API (19-02)](#auth-api-19-02)
+- [Notes Microservice (26-02)](#notes-microservice-26-02)
 
 ## Kør alle tests
 
@@ -338,6 +341,174 @@ pytest test/test_bcrypt_benchmark.py -v -s
 ```
 
 ![Bcrypt Benchmark Resultater](images/bcrypt_benchmark_results.png)
+
+## REST API (19-02)
+
+REST API bygget med **FastAPI** der wrapper den eksisterende flat file database.
+
+### Hvad er et REST API?
+
+Et REST API er en måde at tilgå data over HTTP. I stedet for at kalde Python-funktioner direkte, sendes HTTP requests (GET, POST, PUT, DELETE) til endpoints. Det gør det muligt at bygge en frontend, mobil-app eller et andet system der taler med databasen.
+
+### Opbygning
+
+```
+HTTP Request → FastAPI (api.py) → FlatFileDB (flat_file_db.py) → users.json
+```
+
+- **FastAPI** modtager HTTP requests og validerer input med Pydantic models
+- **FlatFileDB** håndterer CRUD operationer og gemmer i JSON
+- **Swagger UI** auto-genereres på `/docs` til test af endpoints
+
+### Endpoints
+
+| Metode | Endpoint | Beskrivelse | Status Code |
+|--------|----------|-------------|-------------|
+| `POST` | `/users` | Opret bruger | 201 |
+| `GET` | `/users` | List alle brugere | 200 |
+| `GET` | `/users/{id}` | Hent bruger | 200 / 404 |
+| `PUT` | `/users/{id}` | Opdater bruger | 200 / 404 |
+| `DELETE` | `/users/{id}` | Slet bruger | 200 / 404 |
+
+### Kør serveren
+
+```bash
+uvicorn api:app --reload
+```
+
+Swagger docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+### Tests
+
+```bash
+pytest test/test_api.py -v
+```
+
+![API Test Resultater](images/api_test_results.png)
+
+![Swagger Docs](images/swagger_docs.png)
+
+## Auth API (19-02)
+
+Authorization REST API med **JWT security tokens** og rolle-baseret adgangskontrol.
+
+### Hvad er bygget?
+
+Et authentication system der håndterer brugerregistrering, login med JWT tokens og rolle-baseret adgangskontrol (`admin`/`user`). Når serveren startes uden database, oprettes automatisk en admin-bruger. Passwords hashes med HMAC-SHA256 + tilfældigt salt, og persondata (navn) krypteres med Fernet inden det gemmes.
+
+### Opbygning
+
+```
+POST /token → AuthService verificerer password → JWT token returneres
+POST /deactivate → Token verificeres → Rolle tjekkes → Bruger deaktiveres
+```
+
+- **auth_api.py** — FastAPI endpoints (register, token, deactivate, activate)
+- **auth_service.py** — Password hashing (HMAC+salt), Fernet kryptering, JWT tokens
+- **.env** — Test secrets (committed med vilje, se secrets håndtering nedenfor)
+
+### Token Flow
+
+```
+1. Login (POST /token) → JWT Bearer token returneres
+2. Token sendes i header → API verificerer og giver adgang
+3. Token udløber efter 1 time → nyt login kræves
+```
+
+### Endpoints
+
+| Metode | Endpoint | Auth? | Beskrivelse |
+|--------|----------|-------|-------------|
+| `POST` | `/register` | ❌ | Registrer ny bruger |
+| `POST` | `/token` | ❌ | Login → få JWT token |
+| `POST` | `/change-password` | 🔒 Token | Skift password |
+| `POST` | `/deactivate` | 🔒 Token | Deaktiver konto (sig selv eller admin) |
+| `POST` | `/activate` | 🔒 Token | Reaktiver konto (kun admin) |
+
+### Roller
+
+| Rolle | Kan deaktivere | Kan aktivere |
+|-------|---------------|-------------|
+| `user` | Kun sig selv | ❌ Nej |
+| `admin` | Alle brugere | ✅ Ja |
+
+### Secrets håndtering
+
+| Miljø | Hvor secrets ligger | I git? |
+|-------|--------------------|---------|
+| Test | `.env` fil | ✅ Ja (bevidst) |
+| Produktion | Environment variables | ❌ Nej |
+
+### Kør serveren
+
+```bash
+uvicorn auth_api:app --reload
+```
+
+Default admin login: `admin` / `admin`
+
+### Tests
+
+```bash
+pytest test/test_auth_api.py -v
+```
+
+![Auth Test Resultater](images/auth_test_results.png)
+
+![Auth Swagger Docs](images/auth_swagger_docs.png)
+
+---
+
+## Notes Microservice (26-02)
+
+Microservice der kræver authentication fra Auth API'et. Brugere kan oprette, læse og slette egne noter - men kun hvis de har et gyldigt JWT token.
+
+### Arkitektur
+
+```
+Bruger -> Notes API (port 8001) -> AuthService -> Verificer JWT token
+               |
+               v
+         notes_db.json
+```
+
+Notes API'et genbruger `AuthService` til at verificere tokens. Hvis token er ugyldigt, returneres 401. Brugere kan kun se og slette deres egne noter.
+
+### Endpoints
+
+| Metode | Endpoint | Auth | Beskrivelse |
+|--------|----------|------|-------------|
+| `GET` | `/notes` | 🔒 Token | Hent egne noter |
+| `POST` | `/notes` | 🔒 Token | Opret ny note |
+| `DELETE` | `/notes/{id}` | 🔒 Token | Slet egen note |
+
+### Kør serveren
+
+```bash
+uvicorn notes_api:app --reload --port 8001
+```
+
+### Test Design Teknik: Boundary Value Analysis (BVA)
+
+BVA tester grænseværdier - de steder hvor fejl oftest opstår:
+
+| Grænse | Test cases |
+|--------|-----------|
+| Token | Gyldigt, ugyldigt, manglende |
+| Note title | Tom, kun mellemrum, normal |
+| Note content | Tom, normal, 10.000 tegn |
+| Ejerskab | Egen note, andres note |
+| Note ID | Eksisterende, ikke-eksisterende |
+
+### Tests
+
+```bash
+pytest test/test_notes_api.py -v
+```
+
+![Notes Test Resultater](images/notes_test_results.png)
+
+![Notes Swagger Docs](images/notes_swagger_docs.png)
 
 ## Udarbejdet af
 
